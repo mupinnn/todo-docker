@@ -4,10 +4,12 @@ WORKDIR /app
 
 COPY package.json bun.lock ./
 COPY apps/web/package.json ./apps/web/
+COPY apps/api/package.json ./apps/api/
 
 RUN bun install --filter '@todo-docker/web'
 
 COPY apps/web ./apps/web
+COPY apps/api ./apps/api
 
 RUN cd apps/web && NODE_ENV=production bun run build
 
