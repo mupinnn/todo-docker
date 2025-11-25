@@ -1,34 +1,21 @@
 import { Hono } from "hono";
-import { env as envAdapter } from "hono/adapter";
-import { contextStorage, getContext } from "hono/context-storage";
 import { cors } from "hono/cors";
 import { sign, jwt } from "hono/jwt";
 import { zValidator } from "@hono/zod-validator";
 import * as z from "zod";
 import postgres from "postgres";
-
-type Bindings = {
-  DATABASE_URL: string;
-  CORS_ORIGIN: string;
-  JWT_SECRET: string;
-};
-
-type Context = {
-  Bindings: Bindings;
-};
+import { env } from "./env";
 
 type SQLClient = ReturnType<typeof postgres>;
 
-const env = envAdapter(getContext<Context>());
 const sql: SQLClient = postgres(env.DATABASE_URL);
-const app = new Hono<Context>();
+const app = new Hono();
 
 const authSchema = z.object({
   email: z.email(),
   password: z.string().min(6, "Password must be 6 characters length"),
 });
 
-app.use(contextStorage());
 app.use(
   "*",
   cors({
@@ -41,7 +28,7 @@ app.use(
 app.use("/api/*", jwt({ secret: env.JWT_SECRET }));
 
 const routes = app
-  .get("/health", (c) => c.json({ status: "ok" }))
+  .get("/health", (c) => c.json({ status: "ok", db: env.DATABASE_URL }))
   .post("/api/auth/register", zValidator("json", authSchema), async (c) => {
     const { email, password } = c.req.valid("json");
 

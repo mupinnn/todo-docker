@@ -22,6 +22,15 @@ docker run --rm -v "$(pwd):/app" -w /app oven/bun:1.3.3-alpine bun install
 docker-compose up -d
 ```
 
+3. Generate the database schema
+
+```sh
+cat apps/api/sql/schema.sql | docker exec -i todo-docker-db-1 psql -U todo-docker -d todo_docker -f-
+
+# to confirm
+docker exec -it todo-docker-db-1 psql -U todo-docker -d todo_docker
+```
+
 ## Room to improve
 
 - Multi-stage build

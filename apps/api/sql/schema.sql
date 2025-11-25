@@ -1,3 +1,5 @@
+-- seed with `psql -d todo-docker -f api/sql/schema.sql`
+
 create extension if not exists "uuid-ossp";
 
 create table if not exists users (
