@@ -2,6 +2,10 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import { type InferRequestType, type InferResponseType } from "hono/client";
+import { toast } from "sonner";
+import { apiClient } from "@/lib/api.lib";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,9 +24,8 @@ import {
 } from "@/components/ui/form";
 import { Field, FieldDescription } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/components/providers/auth-provider";
 
-export const Route = createFileRoute("/login")({
+export const Route = createFileRoute("/register")({
   component: RouteComponent,
   beforeLoad: ({ context }) => {
     if (context.auth.isAuthenticated) {
@@ -31,37 +34,51 @@ export const Route = createFileRoute("/login")({
   },
 });
 
-const loginSchema = z.object({
+const registerSchema = z.object({
   email: z.email(),
   password: z.string().min(6, "Password must be 6 characters length"),
 });
 
 function RouteComponent() {
-  const { login } = useAuth();
   const navigate = Route.useNavigate();
-  const form = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<z.infer<typeof registerSchema>>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof loginSchema>) {
-    login.mutate(values, {
-      onSuccess() {
-        navigate({ to: "/" });
-      },
-    });
+  const registerMutation = useMutation<
+    InferResponseType<typeof apiClient.auth.register.$post>,
+    Error,
+    InferRequestType<typeof apiClient.auth.register.$post>
+  >({
+    mutationFn: async (register) => {
+      const response = await apiClient.auth.register.$post(register);
+      if (!response.ok) throw new Error("Something went wrong");
+      return await response.json();
+    },
+    onError(error) {
+      toast.error(error.message);
+    },
+    onSuccess() {
+      toast.success("Account created!");
+      navigate({ to: "/login" });
+    },
+  });
+
+  function onSubmit(values: z.infer<typeof registerSchema>) {
+    registerMutation.mutate({ json: values });
   }
 
   return (
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
+          <CardTitle>Create an account</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your information below to create your account
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -100,12 +117,11 @@ function RouteComponent() {
               />
 
               <Field>
-                <Button type="submit" disabled={login.isPending}>
-                  Login
+                <Button type="submit" disabled={registerMutation.isPending}>
+                  Create account
                 </Button>
                 <FieldDescription className="text-center">
-                  Don&apos;t have an account?{" "}
-                  <Link to="/register">Sign up</Link>{" "}
+                  Already have an account? <Link to="/login">Sign in</Link>
                 </FieldDescription>
               </Field>
             </form>

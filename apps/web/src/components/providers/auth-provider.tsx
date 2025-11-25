@@ -30,6 +30,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     onError(error) {
       toast.error(error.message);
     },
+    onSuccess(data) {
+      localStorage.setItem("token", data.token);
+      setIsAuthenticated(true);
+    },
   });
 
   const logout = () => {

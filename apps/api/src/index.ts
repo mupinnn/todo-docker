@@ -29,7 +29,7 @@ app.use("/api/*", jwt({ secret: env.JWT_SECRET }));
 
 const routes = app
   .get("/health", (c) => c.json({ status: "ok", db: env.DATABASE_URL }))
-  .post("/api/auth/register", zValidator("json", authSchema), async (c) => {
+  .post("/auth/register", zValidator("json", authSchema), async (c) => {
     const { email, password } = c.req.valid("json");
 
     try {
