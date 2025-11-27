@@ -87,7 +87,7 @@ const routes = app
     async (c) => {
       const { task } = c.req.valid("json");
       const todos =
-        await sql`inser into todos (user_id, task) values (${c.get("jwtPayload").userId}, ${task}) returning *`;
+        await sql`insert into todos (user_id, task) values (${c.get("jwtPayload").userId}, ${task}) returning *`;
 
       return c.json(todos[0], 201);
     },
