@@ -13,7 +13,6 @@ type Todo = {
   task: string;
   is_complete: boolean;
   created_at: string;
-  something: string;
 };
 
 const sql: SQLClient = postgres(env.DATABASE_URL);

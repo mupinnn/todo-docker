@@ -50,7 +50,7 @@ function RouteComponent() {
   function onSubmit(values: z.infer<typeof loginSchema>) {
     login.mutate(values, {
       onSuccess() {
-        navigate({ to: "/" });
+        navigate({ to: "/", reloadDocument: true });
       },
     });
   }

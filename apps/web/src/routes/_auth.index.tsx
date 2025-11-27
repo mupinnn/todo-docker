@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { type InferRequestType, type InferResponseType } from "hono/client";
-import { EditIcon, TrashIcon, CircleCheckIcon } from "lucide-react";
+import { TrashIcon, CircleCheckIcon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,10 +20,8 @@ import {
   Form,
   FormControl,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Field, FieldDescription } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Empty,
@@ -184,9 +182,6 @@ function RouteComponent() {
                     {todo.task}
                   </p>
                   <div className="flex items-center gap-2">
-                    <Button size="icon" variant="ghost">
-                      <EditIcon />
-                    </Button>
                     <Button
                       size="icon"
                       variant="ghost"
