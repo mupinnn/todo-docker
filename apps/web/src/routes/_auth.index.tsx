@@ -2,9 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { type InferRequestType, type InferResponseType } from "hono/client";
+import { EditIcon, TrashIcon, CircleCheckIcon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,7 +25,15 @@ import {
 } from "@/components/ui/form";
 import { Field, FieldDescription } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { apiClient } from "@/lib/api.lib";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_auth/")({
   component: RouteComponent,
@@ -39,6 +49,16 @@ function RouteComponent() {
     resolver: zodResolver(todoSchema),
     defaultValues: {
       task: "",
+    },
+  });
+
+  const queryClient = useQueryClient();
+  const todosQuery = useQuery({
+    queryKey: ["todos"],
+    async queryFn() {
+      const response = await apiClient.api.todos.$get();
+      if (!response.ok) throw new Error("Error while getting your todos");
+      return await response.json();
     },
   });
 
@@ -59,10 +79,58 @@ function RouteComponent() {
     onSuccess() {
       formCreate.reset();
     },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["todos"] }),
+  });
+
+  const $deleteTodo = apiClient.api.todos[":id"].$delete;
+  const deleteTodoMutation = useMutation<
+    InferResponseType<typeof $deleteTodo>,
+    Error,
+    InferRequestType<typeof $deleteTodo>
+  >({
+    async mutationFn(params) {
+      const response = await $deleteTodo(params);
+      if (!response.ok) throw new Error("Error when deleting a todo");
+      return await response.json();
+    },
+    onError(error) {
+      toast.error(error.message);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["todos"] }),
+  });
+
+  const $updateTodo = apiClient.api.todos[":id"].$patch;
+  const updateTodoMutation = useMutation<
+    InferResponseType<typeof $updateTodo>,
+    Error,
+    InferRequestType<typeof $updateTodo>
+  >({
+    async mutationFn(updatedTodo) {
+      const response = await $updateTodo(updatedTodo);
+      if (!response.ok) throw new Error("Error when updating a todo");
+      return await response.json();
+    },
+    onError(error) {
+      toast.error(error.message);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["todos"] }),
   });
 
   function onSubmitCreate(values: z.infer<typeof todoSchema>) {
     createTodoMutation.mutate({ json: values });
+  }
+
+  function onDelete(id: string) {
+    deleteTodoMutation.mutate({ param: { id } });
+  }
+
+  function onTodoChecked(checked: boolean | "indeterminate", id: string) {
+    if (typeof checked === "boolean") {
+      updateTodoMutation.mutate({
+        json: { is_complete: checked },
+        param: { id },
+      });
+    }
   }
 
   return (
@@ -72,7 +140,7 @@ function RouteComponent() {
           <CardTitle>To-Do</CardTitle>
           <CardDescription>Please, do something.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-6">
           <Form {...formCreate}>
             <form
               onSubmit={formCreate.handleSubmit(onSubmitCreate)}
@@ -98,6 +166,54 @@ function RouteComponent() {
               />
             </form>
           </Form>
+
+          {todosQuery.isPending && <Skeleton className="h-40" />}
+          {todosQuery.isError && <p>Something went wrong.</p>}
+          {todosQuery.isPending ? (
+            <Skeleton className="h-40" />
+          ) : todosQuery.isError ? (
+            <p>Something went wrong</p>
+          ) : todosQuery.data.todos.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {todosQuery.data.todos.map((todo) => (
+                <div
+                  key={todo.id}
+                  className="flex items-center gap-2 justify-between"
+                >
+                  <p className={todo.is_complete ? "line-through" : ""}>
+                    {todo.task}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button size="icon" variant="ghost">
+                      <EditIcon />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-destructive"
+                      onClick={() => onDelete(todo.id)}
+                    >
+                      <TrashIcon />
+                    </Button>
+                    <Checkbox
+                      checked={todo.is_complete}
+                      onCheckedChange={(c) => onTodoChecked(c, todo.id)}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <CircleCheckIcon />
+                </EmptyMedia>
+                <EmptyTitle>Nothing todo yet</EmptyTitle>
+                <EmptyDescription>Add something todo</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
         </CardContent>
       </Card>
     </div>

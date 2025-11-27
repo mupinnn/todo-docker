@@ -7,6 +7,14 @@ import postgres from "postgres";
 import { env } from "./env";
 
 type SQLClient = ReturnType<typeof postgres>;
+type Todo = {
+  id: string;
+  user_id: string;
+  task: string;
+  is_complete: boolean;
+  created_at: string;
+  something: string;
+};
 
 const sql: SQLClient = postgres(env.DATABASE_URL);
 const app = new Hono();
@@ -76,10 +84,11 @@ const routes = app
   })
   .get("/api/todos", async (c) => {
     const jwtPayload = c.get("jwtPayload");
-    const todos =
-      await sql`select * from todos where user_id = ${jwtPayload.userId} order by created_at desc`;
+    const todos = await sql<
+      Todo[]
+    >`select * from todos where user_id = ${jwtPayload.userId} order by created_at desc`;
 
-    return c.json(todos);
+    return c.json({ todos: todos as Todo[] });
   })
   .post(
     "/api/todos",
