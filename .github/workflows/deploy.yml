@@ -16,10 +16,10 @@ jobs:
       - name: Build docker images
         run: |
           # build `web`
-          docker build -t todo-docker/apps/web:latest ./web
+          docker build -t todo-docker/apps/web:latest ./apps/web
 
           # build `api`
-          docker build -t todo-docker/apps/api:latest ./api
+          docker build -t todo-docker/apps/api:latest ./apps/api
 
       - name: Save docker images to tarball
         run: |
