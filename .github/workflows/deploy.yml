@@ -13,17 +13,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create .env
+        run: |
+          echo "${{ secrets.ENV_ROOT }}" > .env
+
+          mkdir -p apps/web
+          echo "${{ secrets.ENV_WEB }}" > ./apps/web/.env
+
+          mkdir -p apps/api
+          echo "${{ secrets.ENV_API }}" > ./apps/api/.env
+
       - name: Build docker images
         run: |
-          # build `web`
-          docker build -t todo-docker/apps/web:latest ./apps/web
-
-          # build `api`
-          docker build -t todo-docker/apps/api:latest ./apps/api
+          docker-compose build
 
       - name: Save docker images to tarball
         run: |
-          docker save -o app-images.tar todo-docker/apps/web:latest todo-docker/apps/api:latest
+          docker save -o app-images.tar todo-docker-api:latest todo-docker-web:latest
 
       - name: Copy files to server
         uses: appleboy/scp-action@v1
@@ -31,8 +37,8 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
-          source: "app-images.tar,docker-compose.yml"
-          target: "~/deploy"
+          source: "app-images.tar,docker-compose.yml,.env,apps/"
+          target: "~/deploy/todo-docker"
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
@@ -41,7 +47,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           script: |
-            cd ~/deploy
+            cd ~/deploy/todo-docker
 
             echo "Loading docker images . . ."
             docker load -i app-images.tar
