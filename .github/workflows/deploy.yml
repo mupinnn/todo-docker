@@ -1,0 +1,54 @@
+name: Build and deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build docker images
+        run: |
+          # build `web`
+          docker build -t todo-docker/apps/web:latest ./web
+
+          # build `api`
+          docker build -t todo-docker/apps/api:latest ./api
+
+      - name: Save docker images to tarball
+        run: |
+          docker save -o app-images.tar todo-docker/apps/web:latest todo-docker/apps/api:latest
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          source: "app-images.tar,docker-compose.yml"
+          target: "~/deploy"
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          script: |
+            cd ~/deploy
+
+            echo "Loading docker images . . ."
+            docker load -i app-images.tar
+
+            echo "Restarting services . . ."
+            docker-compose up -d --no-build --force-recreate
+
+            rm app-images.tar
+
+            docker image prune -f
