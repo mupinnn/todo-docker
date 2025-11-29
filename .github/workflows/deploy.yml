@@ -25,7 +25,8 @@ jobs:
 
       - name: Build docker images
         run: |
-          docker-compose build
+          docker build -t todo-docker-web:latest -f apps/web/Dockerfile .
+          docker build -t todo-docker-api:latest -f apps/api/Dockerfile .
 
       - name: Save docker images to tarball
         run: |
