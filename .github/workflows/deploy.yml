@@ -54,7 +54,7 @@ jobs:
             docker load -i app-images.tar
 
             echo "Restarting services . . ."
-            docker-compose up -d --no-build --force-recreate
+            docker compose up -d --no-build --force-recreate
 
             rm app-images.tar
 
