@@ -38,7 +38,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
-          source: "app-images.tar,docker-compose.yml,.env,apps/"
+          source: "app-images.tar,docker-compose.yml,docker-compose.prod.yml,.env,apps/web/.env,apps/api/.env"
           target: "~/deploy/todo-docker"
 
       - name: Deploy to server
@@ -54,7 +54,7 @@ jobs:
             docker load -i app-images.tar
 
             echo "Restarting services . . ."
-            docker compose up -d --no-build --force-recreate
+            docker compose -f docker-compose.yml -f docker-compose.propd.yml up -d --no-build --force-recreate
 
             rm app-images.tar
 
