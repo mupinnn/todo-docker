@@ -45,10 +45,7 @@ const routes = app
 
       return c.json({ message: "Successfully registered!" });
     } catch (error) {
-      if (error instanceof postgres.PostgresError) {
-        console.log(error);
-      }
-
+      console.log(error);
       return c.json({ message: "Internal server error" }, 500);
     }
   })
@@ -78,6 +75,7 @@ const routes = app
       );
       return c.json({ token });
     } catch (error) {
+      console.error(error);
       return c.json({ message: "Internal server error" }, 500);
     }
   })
