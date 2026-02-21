@@ -15,6 +15,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "dbmate": "^2.31.0"
   }
 }
