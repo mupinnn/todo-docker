@@ -5,7 +5,8 @@
   "type": "module",
   "types": "./src/index.ts",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "build": "bun build --compile --minify ./src --outfile todo-docker-api"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.5",

@@ -32,7 +32,7 @@ app.use(
     allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   }),
 );
-app.use("/api/*", jwt({ secret: env.JWT_SECRET }));
+app.use("/api/*", jwt({ secret: env.JWT_SECRET, alg: "HS256" }));
 
 const routes = app
   .get("/health", (c) => c.json({ status: "ok", db: env.DATABASE_URL }))
