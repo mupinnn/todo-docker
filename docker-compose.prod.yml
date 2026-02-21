@@ -7,10 +7,20 @@ services:
         - NODE_ENV=production
     env_file: apps/web/.env
     ports:
-      - "127.0.0.1:5173:80"
+      - "127.0.0.1:5174:80"
     depends_on:
       - api
     restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: migrate
+    env_file: apps/api/.env
+    depends_on:
+      - db
+    restart: "no"
 
   api:
     build:
@@ -20,8 +30,10 @@ services:
       - "127.0.0.1:3000:3000"
     env_file: apps/api/.env
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       db:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
     healthcheck:
       test:

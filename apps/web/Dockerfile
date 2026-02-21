@@ -12,13 +12,13 @@ FROM base AS builder
 COPY --from=prepare /app/out/json/ .
 COPY --from=prepare /app/out/bun.lock ./bun.lock
 
-RUN bun ci --production
+RUN bun ci
 COPY --from=prepare /app/out/full/ .
 RUN bun turbo build
 
 FROM nginx:alpine-slim AS runner
 COPY apps/web/nginx /etc/nginx/conf.d
-COPY --from-builder /app/apps/web/dist /usr/share/nginx/html
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
