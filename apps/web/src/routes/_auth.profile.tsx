@@ -1,9 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useAuth } from "@/components/providers/auth-provider";
 
 export const Route = createFileRoute("/_auth/profile")({
   component: RouteComponent,
+  beforeLoad({ context }) {
+    context.queryClient.invalidateQueries({ queryKey: ["profile"] });
+  },
 });
 
 function RouteComponent() {
-  return <div>Hello "/_auth/profile"!</div>;
+  const { profile } = useAuth();
+
+  return <div>Hello, {profile?.email}!</div>;
 }
