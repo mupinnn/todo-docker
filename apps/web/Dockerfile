@@ -1,21 +1,24 @@
-FROM oven/bun:1.3.3-alpine as builder
-
+FROM oven/bun:1.3.3-alpine AS base
+RUN apk update
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-COPY package.json bun.lock ./
-COPY apps/web/package.json ./apps/web/
-COPY apps/api/package.json ./apps/api/
+FROM base AS prepare
+RUN bun add -g turbo@^2
+COPY . .
+RUN turbo prune "@todo-docker/web" --docker
 
-RUN bun install --filter '@todo-docker/web'
+FROM base AS builder
+COPY --from=prepare /app/out/json/ .
+COPY --from=prepare /app/out/bun.lock ./bun.lock
 
-COPY apps/web ./apps/web
-COPY apps/api ./apps/api
+RUN bun ci
+COPY --from=prepare /app/out/full/ .
+RUN bun turbo build
 
-RUN cd apps/web && NODE_ENV=production bun run build
-
-FROM nginx:alpine-slim
-
+FROM nginx:alpine-slim AS runner
 COPY apps/web/nginx /etc/nginx/conf.d
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 
 EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
