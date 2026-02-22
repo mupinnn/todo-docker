@@ -17,9 +17,7 @@ export interface AuthProviderState {
 const AuthContext = createContext<AuthProviderState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    () => !!localStorage.getItem("token"),
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const login: AuthProviderState["login"] = useMutation({
     mutationFn: async (login) => {
@@ -30,8 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     onError(error) {
       toast.error(error.message);
     },
-    onSuccess(data) {
-      localStorage.setItem("token", data.token);
+    onSuccess() {
       setIsAuthenticated(true);
     },
   });
