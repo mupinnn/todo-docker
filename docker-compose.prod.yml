@@ -7,7 +7,7 @@ services:
         - NODE_ENV=production
     env_file: apps/web/.env
     ports:
-      - "127.0.0.1:5174:80"
+      - "127.0.0.1:5173:80"
     depends_on:
       - api
     restart: unless-stopped
@@ -35,19 +35,6 @@ services:
       db:
         condition: service_started
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000/health",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   db:
     ports: !override
