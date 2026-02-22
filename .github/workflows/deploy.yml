@@ -27,10 +27,11 @@ jobs:
         run: |
           docker build -t todo-docker-web:latest -f apps/web/Dockerfile .
           docker build -t todo-docker-api:latest -f apps/api/Dockerfile .
+          docker build --target migrate -t todo-docker-migrate:latest -f apps/api/Dockerfile .
 
       - name: Save docker images to tarball
         run: |
-          docker save -o app-images.tar todo-docker-api:latest todo-docker-web:latest
+          docker save -o app-images.tar todo-docker-api:latest todo-docker-web:latest todo-docker-migrate:latest
 
       - name: Copy files to server
         uses: appleboy/scp-action@v1
