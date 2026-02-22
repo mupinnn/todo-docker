@@ -96,7 +96,7 @@ export const authRoutes = new Hono()
         sameSite: "lax",
       });
 
-      return c.json({ message: "Successfully logged in!" });
+      return c.json({ message: "Successfully logged in!", user });
     } catch {
       return c.json({ message: "Something went wrong." }, 500);
     }

@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 export const Route = createFileRoute("/register")({
   component: RouteComponent,
   beforeLoad: ({ context }) => {
-    if (context.auth.isAuthenticated) {
+    if (context.auth.profile) {
       throw redirect({ to: "/" });
     }
   },

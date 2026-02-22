@@ -1,11 +1,20 @@
-import { useState, useContext, createContext } from "react";
-import { useMutation, type UseMutationResult } from "@tanstack/react-query";
+import { useContext, createContext } from "react";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationResult,
+} from "@tanstack/react-query";
+import { LoaderIcon } from "lucide-react";
 import { type InferResponseType, type InferRequestType } from "hono/client";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api.lib";
 
 export interface AuthProviderState {
-  isAuthenticated: boolean;
+  profile?: InferResponseType<
+    typeof apiClient.api.profile.$get,
+    200
+  >["profile"];
   login: UseMutationResult<
     InferResponseType<typeof apiClient.auth.login.$post>,
     Error,
@@ -17,7 +26,16 @@ export interface AuthProviderState {
 const AuthContext = createContext<AuthProviderState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const queryClient = useQueryClient();
+
+  const profileQuery = useQuery({
+    queryKey: ["profile"],
+    async queryFn() {
+      const response = await apiClient.api.profile.$get();
+      if (!response.ok) throw new Error("Error while getting your profile");
+      return await response.json();
+    },
+  });
 
   const login: AuthProviderState["login"] = useMutation({
     mutationFn: async (login) => {
@@ -29,17 +47,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.error(error.message);
     },
     onSuccess() {
-      setIsAuthenticated(true);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
   });
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem("token");
-  };
+  const logout = () => {};
+
+  if (profileQuery.isLoading)
+    return (
+      <div className="flex min-h-svh w-full items-center justify-center">
+        <LoaderIcon className="animate-spin" />
+      </div>
+    );
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{ profile: profileQuery.data?.profile, login, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

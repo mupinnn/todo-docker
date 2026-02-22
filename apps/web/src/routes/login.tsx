@@ -25,7 +25,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 export const Route = createFileRoute("/login")({
   component: RouteComponent,
   beforeLoad: ({ context }) => {
-    if (context.auth.isAuthenticated) {
+    if (context.auth.profile) {
       throw redirect({ to: "/" });
     }
   },
@@ -50,7 +50,7 @@ function RouteComponent() {
   function onSubmit(values: z.infer<typeof loginSchema>) {
     login.mutate(values, {
       onSuccess() {
-        navigate({ to: "/" });
+        navigate({ to: "/todo" });
       },
     });
   }
