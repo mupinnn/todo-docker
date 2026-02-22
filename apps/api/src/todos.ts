@@ -2,15 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import * as z from "zod";
 import { sql } from "./db";
-import { type AppVariables } from "./types";
-
-type Todo = {
-  id: string;
-  user_id: string;
-  task: string;
-  is_complete: boolean;
-  created_at: string;
-};
+import type { AppVariables, Todo } from "./types";
 
 export const todoRoutes = new Hono<{ Variables: AppVariables }>()
   .get("/", async (c) => {

@@ -71,11 +71,36 @@ function RouteComponent() {
       if (!response.ok) throw new Error("Error when creating new todo");
       return await response.json();
     },
-    onError(error) {
-      toast.error(error.message);
-    },
-    onSuccess() {
+    onMutate: async (newTodo) => {
       formCreate.reset();
+      await queryClient.cancelQueries({ queryKey: ["todos"] });
+
+      const previousTodos = queryClient.getQueryData<
+        InferResponseType<typeof apiClient.api.todos.$get, 200>
+      >(["todos"]);
+
+      if (previousTodos) {
+        const optimisticTodo = {
+          id: Date.now().toString(),
+          user_id: "",
+          task: newTodo.json.task,
+          is_complete: false,
+          created_at: new Date().toISOString(),
+          updated_at: null,
+        };
+        queryClient.setQueryData<
+          InferResponseType<typeof apiClient.api.todos.$get, 200>
+        >(["todos"], { todos: [...previousTodos.todos, optimisticTodo] });
+      }
+
+      return previousTodos;
+    },
+    onError: (error, _, previousTodos) => {
+      toast.error(error.message);
+
+      if (previousTodos) {
+        queryClient.setQueryData(["todos"], previousTodos);
+      }
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["todos"] }),
   });
@@ -91,8 +116,31 @@ function RouteComponent() {
       if (!response.ok) throw new Error("Error when deleting a todo");
       return await response.json();
     },
-    onError(error) {
+    onMutate: async (deletedTodo) => {
+      await queryClient.cancelQueries({ queryKey: ["todos"] });
+
+      const previousTodos = queryClient.getQueryData<
+        InferResponseType<typeof apiClient.api.todos.$get, 200>
+      >(["todos"]);
+
+      if (previousTodos) {
+        queryClient.setQueryData<
+          InferResponseType<typeof apiClient.api.todos.$get, 200>
+        >(["todos"], {
+          todos: previousTodos.todos.filter(
+            (todo) => todo.id !== deletedTodo.param.id,
+          ),
+        });
+      }
+
+      return previousTodos;
+    },
+    onError(error, _, previousTodos) {
       toast.error(error.message);
+
+      if (previousTodos) {
+        queryClient.setQueryData(["todos"], previousTodos);
+      }
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["todos"] }),
   });
@@ -108,8 +156,38 @@ function RouteComponent() {
       if (!response.ok) throw new Error("Error when updating a todo");
       return await response.json();
     },
-    onError(error) {
+    onMutate: async (updatedTodo) => {
+      await queryClient.cancelQueries({ queryKey: ["todos"] });
+
+      const previousTodos = queryClient.getQueryData<
+        InferResponseType<typeof apiClient.api.todos.$get, 200>
+      >(["todos"]);
+
+      if (previousTodos) {
+        const optimisticTodos = previousTodos.todos.map((todo) => {
+          if (todo.id === updatedTodo.param.id) {
+            return {
+              ...todo,
+              ...updatedTodo.json,
+            };
+          }
+
+          return todo;
+        });
+
+        queryClient.setQueryData<
+          InferResponseType<typeof apiClient.api.todos.$get, 200>
+        >(["todos"], { todos: optimisticTodos });
+      }
+
+      return previousTodos;
+    },
+    onError(error, _, previousTodos) {
       toast.error(error.message);
+
+      if (previousTodos) {
+        queryClient.setQueryData(["todos"], previousTodos);
+      }
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["todos"] }),
   });
