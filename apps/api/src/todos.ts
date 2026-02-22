@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import * as z from "zod";
 import { sql } from "./db";
+import { type AppVariables } from "./types";
 
 type Todo = {
   id: string;
@@ -11,12 +12,12 @@ type Todo = {
   created_at: string;
 };
 
-export const todoRoutes = new Hono()
+export const todoRoutes = new Hono<{ Variables: AppVariables }>()
   .get("/", async (c) => {
     const jwtPayload = c.get("jwtPayload");
     const todos = await sql<
       Todo[]
-    >`select * from todos where user_id = ${jwtPayload.userId} order by created_at desc`;
+    >`select * from todos where user_id = ${jwtPayload.sub} order by created_at desc`;
 
     return c.json({ todos: todos as Todo[] });
   })
@@ -26,7 +27,7 @@ export const todoRoutes = new Hono()
     async (c) => {
       const { task } = c.req.valid("json");
       const todos =
-        await sql`insert into todos (user_id, task) values (${c.get("jwtPayload").userId}, ${task}) returning *`;
+        await sql`insert into todos (user_id, task) values (${c.get("jwtPayload").sub}, ${task}) returning *`;
 
       return c.json(todos[0], 201);
     },
@@ -50,7 +51,7 @@ export const todoRoutes = new Hono()
         return c.json({ message: "No fields to update" }, 400);
 
       const todos =
-        await sql`update todos set ${sql(updatedData)} where id = ${c.req.param("id")} and user_id = ${c.get("jwtPayload").userId} returning *`;
+        await sql`update todos set ${sql(updatedData)} where id = ${c.req.param("id")} and user_id = ${c.get("jwtPayload").sub} returning *`;
 
       if (todos.length === 0) return c.json({ message: "Todo not found" }, 404);
 
@@ -60,7 +61,7 @@ export const todoRoutes = new Hono()
   .delete("/:id", async (c) => {
     const todos = await sql`
     DELETE FROM todos
-    WHERE id = ${c.req.param("id")} AND user_id = ${c.get("jwtPayload").userId}
+    WHERE id = ${c.req.param("id")} AND user_id = ${c.get("jwtPayload").sub}
     RETURNING id
   `;
 
