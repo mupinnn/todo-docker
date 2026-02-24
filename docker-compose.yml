@@ -8,5 +8,16 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.58.2-noble
+    network_mode: host
+    environment:
+      - BASE_URL=http://localhost:5173
+      - CI=true
+    volumes:
+      - .:/app
+    working_dir: /app/e2e
+    command: npx playwright test
+
 volumes:
   postgres-data:
