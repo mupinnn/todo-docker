@@ -30,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const profileQuery = useQuery({
     queryKey: ["profile"],
+    retry: false,
     async queryFn() {
       const response = await apiClient.api.profile.$get();
       if (!response.ok) throw new Error("Error while getting your profile");
