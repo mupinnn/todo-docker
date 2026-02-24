@@ -1,12 +1,18 @@
+import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+export const CHROMIUM_AUTH_FILE = path.join(
+  import.meta.dirname,
+  "./.auth/user-chromium.json",
+);
+export const FIREFOX_AUTH_FILE = path.join(
+  import.meta.dirname,
+  "./.auth/user-firefox.json",
+);
+export const WEBKIT_AUTH_FILE = path.join(
+  import.meta.dirname,
+  "./.auth/user-webkit.json",
+);
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -32,52 +38,54 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
+    // { name: "setup", testMatch: /.*\.setup\.ts/ },
+
     //--begin-chromium
     {
-      name: "chromium",
+      name: "chromium-setup",
+      testMatch: /chromium.setup.ts/,
       use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: CHROMIUM_AUTH_FILE,
+      },
+      dependencies: ["chromium-setup"],
     },
     //--end-chromium
 
     //--begin-firefox
     {
-      name: "firefox",
+      name: "firefox-setup",
+      testMatch: /firefox.setup.ts/,
       use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "firefox",
+      use: {
+        ...devices["Desktop Firefox"],
+        storageState: FIREFOX_AUTH_FILE,
+      },
+      dependencies: ["firefox-setup"],
     },
     //--end-firefox
 
     //--begin-webkit
+    // setup using chromium to get the secure cookies and alter it later
+    {
+      name: "webkit-setup",
+      testMatch: /webkit.setup.ts/,
+    },
     {
       name: "webkit",
-      use: { ...devices["Desktop Safari"] },
+      use: {
+        ...devices["Desktop Safari"],
+        storageState: WEBKIT_AUTH_FILE,
+      },
+      dependencies: ["webkit-setup"],
     },
     //--end-webkit
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
   ],
-
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
 });

@@ -21,6 +21,7 @@ import {
   FormControl,
   FormItem,
   FormMessage,
+  FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -228,6 +229,7 @@ function RouteComponent() {
                 render={({ field }) => (
                   <FormItem className="flex w-full gap-2">
                     <div className="flex flex-col gap-2">
+                      <FormLabel className="hidden">Task</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="What are you gonna do?"
@@ -246,14 +248,15 @@ function RouteComponent() {
           {todosQuery.isPending && <Skeleton className="h-40" />}
           {todosQuery.isError && <p>Something went wrong.</p>}
           {todosQuery.isPending ? (
-            <Skeleton className="h-40" />
+            <Skeleton data-testid="todo-skeleton" className="h-40" />
           ) : todosQuery.isError ? (
             <p>Something went wrong</p>
           ) : todosQuery.data.todos.length > 0 ? (
-            <div className="flex flex-col gap-2">
+            <div data-testid="todo-list" className="flex flex-col gap-2">
               {todosQuery.data.todos.map((todo) => (
                 <div
                   key={todo.id}
+                  data-testid={`todo-list-item-${todo.id}`}
                   className="flex items-center gap-2 justify-between"
                 >
                   <p className={todo.is_complete ? "line-through" : ""}>
