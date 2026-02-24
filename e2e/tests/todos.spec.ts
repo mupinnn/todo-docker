@@ -2,23 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe.configure({ mode: "serial" });
 
-test.beforeEach(async ({ page, browserName }) => {
-  /**
-   * workaround to make `Set-Cookie` work in unsecure context (localhost) for webkit.
-   * https://chromestatus.com/feature/6269417340010496
-   * https://bugs.webkit.org/show_bug.cgi?id=281149
-   */
-  if (browserName === "webkit") {
-    const storageState = await page.context().storageState();
-    const cookies = storageState.cookies;
-    const unsecureCookies = cookies.map((cookie) => ({
-      ...cookie,
-      secure: false,
-    }));
-
-    await page.context().addCookies(unsecureCookies);
-  }
-
+test.beforeEach(async ({ page }) => {
   await page.goto("/todo");
 });
 

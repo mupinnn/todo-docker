@@ -1,12 +1,18 @@
-import { test as setup, expect } from "@playwright/test";
+import { test as setup, expect, type Page } from "@playwright/test";
 
 type SetupAuth = {
   email: string;
   password: string;
   authStorePath: string;
+  alterStoreCallback?: ({ page }: { page: Page }) => Promise<void>;
 };
 
-export function setupAuth({ email, password, authStorePath }: SetupAuth) {
+export function setupAuth({
+  email,
+  password,
+  authStorePath,
+  alterStoreCallback,
+}: SetupAuth) {
   setup.describe.configure({ mode: "serial" });
   setup.describe("Authentication", () => {
     setup("Register", async ({ page }) => {
@@ -33,6 +39,7 @@ export function setupAuth({ email, password, authStorePath }: SetupAuth) {
         page.getByText("Please, do something.", { exact: true }),
       ).toBeVisible();
 
+      await alterStoreCallback?.({ page });
       await page.context().storageState({ path: authStorePath });
     });
   });
