@@ -20,13 +20,11 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  detect-changes:
+  changes:
     if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: read
     outputs:
-      apps: ${{ steps.filter.outputs.detect-changes }}
+      apps: ${{ steps.filter.outputs.changes }}
     steps:
       - uses: dorny/paths-filter@v3
         id: filter
@@ -36,12 +34,13 @@ jobs:
             api: 'apps/api/**'
 
   check:
-    needs: detect-changes
+    needs: changes
     runs-on: ubuntu-latest
     steps:
       - name: Check
         run: |
-          echo ${{ needs.detect-changes.outputs.apps }}
+          echo ${{ fromJson(needs.changes.outputs.apps) }}
+          echo ${{ needs.changes.outputs.apps }}
 
   build-images:
     needs: detect-changes
