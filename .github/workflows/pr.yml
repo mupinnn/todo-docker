@@ -38,9 +38,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check
+        env:
+          OUTUPUS: ${{ fromJson(needs.detect-changes.outputs) }}
         run: |
-          # echo ${{ fromJson(needs.detect-changes.outputs) }}
-          echo ${{ needs.detect-changes.outputs }}
+          echo "$OUTUPUS"
 
   build-images:
     needs: detect-changes
