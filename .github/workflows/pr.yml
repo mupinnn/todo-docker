@@ -1,7 +1,6 @@
 name: Build Docker Image on PR
 
 on:
-  workflow_dispatch:
   pull_request:
     types:
       - opened
@@ -21,11 +20,11 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  changes:
+  detect-changes:
     if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     outputs:
-      apps: ${{ steps.filter.outputs.changes }}
+      apps: ${{ steps.filter.outputs.detect-changes }}
     steps:
       - uses: dorny/paths-filter@v3
         id: filter
@@ -35,12 +34,12 @@ jobs:
             api: 'apps/api/**'
 
   check:
-    needs: changes
+    needs: detect-changes
     runs-on: ubuntu-latest
     steps:
       - name: Check
         run: |
-          echo ${{ fromJson(needs.changes.outputs.apps) }}
+          echo ${{ fromJson(needs.detect-changes.outputs.apps) }}
           echo ${{ needs.changes.outputs.apps }}
 
   build-images:
