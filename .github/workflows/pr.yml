@@ -35,6 +35,14 @@ jobs:
             web: 'apps/web/**'
             api: 'apps/api/**'
 
+  check:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check
+        run: |
+          echo ${{ needs.detect-changes.outputs.apps }}
+
   build-images:
     needs: detect-changes
     strategy:
