@@ -39,8 +39,8 @@ jobs:
     steps:
       - name: Check
         run: |
-          echo ${{ fromJson(needs.detect-changes.outputs) }}
-          echo ${{ needs.changes.outputs }}
+          # echo ${{ fromJson(needs.detect-changes.outputs) }}
+          echo ${{ needs.detect-changes.outputs }}
 
   build-images:
     needs: detect-changes
