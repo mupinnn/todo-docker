@@ -39,9 +39,8 @@ jobs:
     steps:
       - name: Check
         env:
-          OUTUPUS: ${{ fromJson(needs.detect-changes.outputs) }}
-        run: |
-          echo "$OUTUPUS"
+          OUTUPUS: ${{ toJson(needs.detect-changes.outputs) }}
+        run: echo "$OUTUPUS"
 
   build-images:
     needs: detect-changes
