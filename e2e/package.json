@@ -1,0 +1,10 @@
+{
+  "name": "@todo-docker/e2e",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/bun": "latest"
+  }
+}

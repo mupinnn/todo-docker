@@ -30,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const profileQuery = useQuery({
     queryKey: ["profile"],
+    retry: false,
     async queryFn() {
       const response = await apiClient.api.profile.$get();
       if (!response.ok) throw new Error("Error while getting your profile");
@@ -55,7 +56,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   if (profileQuery.isLoading)
     return (
-      <div className="flex min-h-svh w-full items-center justify-center">
+      <div
+        data-testid="page-loader"
+        className="flex min-h-svh w-full items-center justify-center"
+      >
         <LoaderIcon className="animate-spin" />
       </div>
     );
