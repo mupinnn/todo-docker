@@ -1,18 +1,16 @@
 name: Build Docker Image on PR
 
 on:
-  push:
-    branches: ["chore/e2e"]
-  # pull_request:
-  #   types:
-  #     - opened
-  #     - synchronize
-  #     - reopened
-  #   branches:
-  #     - main
-  #   paths:
-  #     - "apps/**"
-  #     - ".github/workflows/pr.yml"
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - ".github/workflows/pr.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
@@ -26,24 +24,14 @@ jobs:
     if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     outputs:
-      apps: ${{ toJson(steps.filter.outputs) }}
+      apps: ${{ steps.filter.outputs.changes }}
     steps:
-      - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
             web: 'apps/web/**'
             api: 'apps/api/**'
-
-  check:
-    needs: detect-changes
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check
-        env:
-          OUTUPUS: ${{ toJson(needs.detect-changes.outputs) }}
-        run: echo "$OUTUPUS"
 
   build-images:
     needs: detect-changes
