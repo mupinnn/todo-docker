@@ -3,7 +3,7 @@
   "workspaces": {
     "packages": [
       "apps/*",
-      "e2e"
+      "e2e*"
     ],
     "catalog": {
       "@eslint/js": "^9.39.1",
