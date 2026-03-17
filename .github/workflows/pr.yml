@@ -35,6 +35,7 @@ jobs:
 
   build-images:
     needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.apps != '' && toJSON(fromJSON(needs.detect-changes.outputs.apps)) != '[]' }}
     strategy:
       matrix:
         app: ${{ fromJSON(needs.detect-changes.outputs.apps) }}
