@@ -7,6 +7,6 @@
       pkgs = import nixpkgs { inherit system; };
     in {
       devShells.${system}.default =
-        pkgs.mkShell { packages = [ pkgs.bun pkgs.nodejs_24 ]; };
+        pkgs.mkShell { packages = [ pkgs.bun pkgs.nodejs_24 pkgs.k6 ]; };
     };
 }
