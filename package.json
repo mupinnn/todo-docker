@@ -2,7 +2,8 @@
   "name": "todo-docker",
   "workspaces": {
     "packages": [
-      "apps/*"
+      "apps/*",
+      "e2e*"
     ],
     "catalog": {
       "@eslint/js": "^9.39.1",
