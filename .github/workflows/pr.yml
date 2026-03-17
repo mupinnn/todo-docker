@@ -57,7 +57,7 @@ jobs:
       - name: Build and push ${{ github.repository }}-${{ matrix.app }} image
         uses: docker/build-push-action@v5
         env:
-          IMAGE_NAME: ${{ github.repository }}/${{ github.repository }}-${{ matrix.app }}:pr-${{ github.event.pull_request.number }}
+          IMAGE_NAME: ${{ github.event.repository.name }}/${{ matrix.app }}:pr-${{ github.event.pull_request.number }}
         with:
           context: .
           file: apps/${{ matrix.app }}/Dockerfile
@@ -69,7 +69,7 @@ jobs:
       - name: Build and push migrate image
         uses: docker/build-push-action@v5
         env:
-          IMAGE_NAME: ${{ env.REGISTRY }}/${{ github.repository }}-migrate:pr-${{ github.event.pull_request.number }}
+          IMAGE_NAME: ${{ env.REGISTRY }}/${{ github.event.repository.name }}/migrate:pr-${{ github.event.pull_request.number }}
         with:
           context: .
           file: apps/api/Dockerfile

@@ -1,10 +1,6 @@
 services:
   web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-      args:
-        - NODE_ENV=production
+    image: ghcr.io/mupinnn/todo-docker/web:${IMAGE_TAG:-latest}
     env_file: apps/web/.env
     ports:
       - "127.0.0.1:5173:80"
@@ -13,19 +9,14 @@ services:
     restart: unless-stopped
 
   migrate:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-      target: migrate
+    image: ghcr.io/mupinnn/todo-docker/migrate:${IMAGE_TAG:-latest}
     env_file: apps/api/.env
     depends_on:
       - db
     restart: "no"
 
   api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+    image: ghcr.io/mupinnn/todo-docker/api:${IMAGE_TAG:-latest}
     ports:
       - "127.0.0.1:3000:3000"
     env_file: apps/api/.env
