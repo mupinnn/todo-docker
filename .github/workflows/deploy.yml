@@ -33,6 +33,7 @@ jobs:
 
   promote-images:
     needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.apps != '' && toJSON(fromJSON(needs.detect-changes.outputs.apps)) != '[]' }}
     strategy:
       matrix:
         app: ${{ fromJSON(needs.detect-changes.outputs.apps) }}
@@ -56,7 +57,7 @@ jobs:
           docker pull ${{ env.REGISTRY }}/${{ github.event.repository.name }}/${{ matrix.app }}:pr-${{ github.event.pull_request.number }}
 
           docker tag ${{ env.REGISTRY }}/${{ github.event.repository.name }}/${{ matrix.app }}:pr-${{ github.event.pull_request.number }} ${{ env.REGISTRY }}/${{ github.event.repository.name }}/${{ matrix.app }}:latest
-          docker tag ${{ env.REGISTRY }}/${{ github.event,repository.name }}/${{ matrix.app }}:pr-${{ github.event.pull_request.number }} ${{ env.REGISTRY }}/${{ github.event.repository.name }}/${{ matrix.app }}:${{ github.sha }}
+          docker tag ${{ env.REGISTRY }}/${{ github.event.repository.name }}/${{ matrix.app }}:pr-${{ github.event.pull_request.number }} ${{ env.REGISTRY }}/${{ github.event.repository.name }}/${{ matrix.app }}:${{ github.sha }}
 
           docker push ${{ env.REGISTRY }}/${{ github.event.repository.name }}/${{ matrix.app }}:latest
           docker push ${{ env.REGISTRY }}/${{ github.event.repository.name }}/${{ matrix.app }}:${{ github.sha }}
