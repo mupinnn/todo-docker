@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { jwt, type JwtVariables } from "hono/jwt";
-import { getCookie } from "hono/cookie";
+import { deleteCookie, getCookie } from "hono/cookie";
 import { UAParser } from "ua-parser-js";
 import { env } from "./env";
-import { authRoutes, hashToken } from "./auth";
+import { authRoutes, hashToken, getDomain } from "./auth";
 import { todoRoutes } from "./todos";
 import { sql } from "./db";
 import type { User, RefreshToken } from "./types";
@@ -66,6 +66,49 @@ const routes = app
       });
 
     return c.json({ sessions: mappedSessions });
+  })
+  .delete("/api/sessions/:sessionId", async (c) => {
+    const sessionId = c.req.param("sessionId");
+    const jwtPayload = c.get("jwtPayload");
+    const currentRefreshToken = getCookie(c, "refresh_token");
+    const [session]: [RefreshToken?] =
+      await sql`select * from refresh_tokens where user_id = ${jwtPayload.sub} and id = ${sessionId}`;
+
+    if (!session)
+      return c.json({ message: "Session not found or unauthorized" }, 404);
+
+    await sql`delete from refresh_tokens where id = ${sessionId}`;
+
+    let isCurrentSession = false;
+    if (currentRefreshToken) {
+      const currentHashedRefreshToken = hashToken(currentRefreshToken);
+      if (currentHashedRefreshToken === session.hashed_token)
+        isCurrentSession = true;
+    }
+
+    if (isCurrentSession) {
+      const cookieDomain = getDomain(new URL(env.CORS_ORIGIN).hostname);
+
+      deleteCookie(c, "access_token", {
+        path: "/",
+        httpOnly: true,
+        secure: true,
+        maxAge: env.JWT_TTL_SECONDS,
+        domain: cookieDomain,
+        sameSite: "lax",
+      });
+
+      deleteCookie(c, "refresh_token", {
+        path: "/",
+        httpOnly: true,
+        secure: true,
+        maxAge: env.REFRESH_TOKEN_TTL_SECONDS,
+        domain: cookieDomain,
+        sameSite: "lax",
+      });
+    }
+
+    return c.json({ message: "Session revoked" });
   });
 
 export type Api = typeof routes;

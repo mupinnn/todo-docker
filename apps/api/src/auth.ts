@@ -14,7 +14,7 @@ const authSchema = z.object({
   password: z.string().min(6, "Password must be 6 characters length."),
 });
 
-const getDomain = (hostname: string) => {
+export const getDomain = (hostname: string) => {
   const cleanUrl = hostname.replace(/(https?:\/\/)?(www.)?/i, "");
   const splittedCleanUrl = cleanUrl.split(".");
   const domain = splittedCleanUrl.slice(cleanUrl.length - 2).join(".");
@@ -144,12 +144,14 @@ export const authRoutes = new Hono()
         where id = ${savedRefreshToken.id}
       `;
 
+      const cookieDomain = getDomain(new URL(env.CORS_ORIGIN).hostname);
+
       setCookie(c, "access_token", accessToken, {
         path: "/",
         httpOnly: true,
         secure: true,
         maxAge: env.JWT_TTL_SECONDS,
-        domain: new URL(env.CORS_ORIGIN).hostname,
+        domain: cookieDomain,
         sameSite: "lax",
       });
 
@@ -158,7 +160,7 @@ export const authRoutes = new Hono()
         httpOnly: true,
         secure: true,
         maxAge: env.REFRESH_TOKEN_TTL_SECONDS,
-        domain: new URL(env.CORS_ORIGIN).hostname,
+        domain: cookieDomain,
         sameSite: "lax",
       });
 
