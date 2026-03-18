@@ -12,6 +12,7 @@
     "@hono/zod-validator": "^0.7.5",
     "hono": "catalog:",
     "postgres": "^3.4.7",
+    "ua-parser-js": "^2.0.9",
     "zod": "catalog:"
   },
   "devDependencies": {

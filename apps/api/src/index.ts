@@ -1,11 +1,13 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { jwt, type JwtVariables } from "hono/jwt";
+import { getCookie } from "hono/cookie";
+import { UAParser } from "ua-parser-js";
 import { env } from "./env";
-import { authRoutes } from "./auth";
+import { authRoutes, hashToken } from "./auth";
 import { todoRoutes } from "./todos";
 import { sql } from "./db";
-import type { User } from "./types";
+import type { User, RefreshToken } from "./types";
 
 type Variables = JwtVariables<{ sub: string }>;
 
@@ -37,6 +39,33 @@ const routes = app
     if (!profile) return c.json({ message: "Profile not found." }, 404);
 
     return c.json({ profile });
+  })
+  .get("/api/sessions", async (c) => {
+    const jwtPayload = c.get("jwtPayload");
+    const currentRefreshToken = getCookie(c, "refresh_token");
+    const sessions = await sql<
+      RefreshToken[]
+    >`select * from refresh_tokens where user_id = ${jwtPayload.sub}`;
+
+    let currentHashedRefreshToken: string | null;
+    if (currentRefreshToken) {
+      currentHashedRefreshToken = hashToken(currentRefreshToken);
+    }
+
+    const mappedSessions = sessions
+      .map((session) => ({
+        ...session,
+        user_agent: UAParser(session.user_agent || ""),
+        is_current:
+          currentHashedRefreshToken !== null &&
+          session.hashed_token === currentHashedRefreshToken,
+      }))
+      .sort((session) => {
+        if (session.is_current) return -1;
+        return 1;
+      });
+
+    return c.json({ sessions: mappedSessions });
   });
 
 export type Api = typeof routes;

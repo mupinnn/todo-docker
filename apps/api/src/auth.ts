@@ -32,7 +32,7 @@ const createAccessToken = async (user: User) => {
   );
 };
 
-const hashToken = (token: string) => {
+export const hashToken = (token: string) => {
   const hasher = new Bun.CryptoHasher("sha512");
   return hasher.update(token).digest("hex");
 };
