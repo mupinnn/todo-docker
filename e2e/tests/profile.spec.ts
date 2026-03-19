@@ -19,3 +19,18 @@ test("Should be able to go to profile page", async ({ page }) => {
     page.getByText(`Hello, ${profile.profile.email}!`),
   ).toBeVisible();
 });
+
+test("Should be able to sign out from current session", async ({ page }) => {
+  await page.goto("/profile");
+  await page.getByTestId("sessions-skeleton").waitFor({ state: "hidden" });
+
+  await expect(page.getByText("Current session")).toBeVisible();
+
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await page.context().clearCookies();
+  await page.waitForURL("/login", { waitUntil: "domcontentloaded" });
+
+  await expect(
+    page.getByText("Login to your account", { exact: true }),
+  ).toBeVisible();
+});
