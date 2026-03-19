@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  migrate:
+    image: ${MIGRATE_IMAGE}
+    env_file: apps/api/.env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    image: ${API_IMAGE}
+    env_file: apps/api/.env
+    environment:
+      - CORS_ORIGIN=http://127.0.0.1:5173
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      db:
+        condition: service_started
+
+  web:
+    image: ${WEB_IMAGE}
+    env_file: apps/web/.env
+    environment:
+      - VITE_API_URL=http://127.0.0.1:3000
+    ports:
+      - "127.0.0.1:5173:80"
+    depends_on:
+      - api
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.49.1-jammy
+    environment:
+      - BASE_URL=http://127.0.0.1:5173
+    working_dir: /app/e2e
+    volumes:
+      - .:/app
+    command: npx playwright test
+    depends_on:
+      web:
+        condition: service_started

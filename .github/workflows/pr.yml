@@ -95,51 +95,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Create .env
+        run: |
+          echo "${{ secrets.ENV_ROOT }}" > .env
+
+          mkdir -p apps/web
+          echo "${{ secrets.ENV_WEB }}" > ./apps/web/.env
+
+          mkdir -p apps/api
+          echo "${{ secrets.ENV_API }}" > ./apps/api/.env
+
       - name: Run E2E tests
         env:
           API_IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/api:pr-${{ github.event.pull_request.number }}
           WEB_IMAGE: ${{ env.REGISTRY}}/${{ github.repository }}/web:pr-${{ github.event.pull_request.number }}
           MIGRATE_IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/migrate:pr-${{ github.event.pull_request.number }}
         run: |
-          cat <<EOF > docker-compose.e2e.run.yml
-          services:
-            db:
-              image: postgres:16
-              environment:
-                - POSTGRES_PASSWORD=postgres
-                - POSTGRES_USER=postgres
-                - POSTGRES_DB=postgres
-            migrate:
-              image: ${MIGRATE_IMAGE}
-              environment:
-                - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres?sslmode=disable
-              depends_on:
-                db:
-                  condition: service_started
-            api:
-              image: ${API_IMAGE}
-              environment:
-                - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
-              depends_on:
-                migrate:
-                  condition: service_completed_successfully
-                db:
-                  condition: service_started
-            web:
-              image: ${WEB_IMAGE}
-              depends_on:
-                - api
-            playwright:
-              image: mcr.microsoft.com/playwright:v1.49.1-jammy
-              environment:
-                - BASE_URL=http://web:80
-              working_dir: /app/e2e
-              volumes:
-                - .:/app
-              command: npx playwright test
-              depends_on:
-                web:
-                  condition: service_started
-          EOF
-
-          docker compose -f docker-compose.e2e.run.yml up --exit-code-from playwright
+          docker compose -f docker-compose.e2e.yml up --exit-code-from playwright
