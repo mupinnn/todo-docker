@@ -57,28 +57,24 @@ jobs:
 
       - name: Build and push ${{ github.repository }}-${{ matrix.app }} image
         uses: docker/build-push-action@v5
-        env:
-          IMAGE_NAME: ${{ github.repository }}/${{ matrix.app }}:pr-${{ github.event.pull_request.number }}
         with:
           context: .
           file: apps/${{ matrix.app }}/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache,scope=${{ matrix.app }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache,scope=${{ matrix.app }},mode=max
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.app }}:pr-${{ github.event.pull_request.number }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.app }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.app }}:buildcache,mode=max
 
       - name: Build and push migrate image
         uses: docker/build-push-action@v5
-        env:
-          IMAGE_NAME: ${{ env.REGISTRY }}/${{ github.repository }}/migrate:pr-${{ github.event.pull_request.number }}
         with:
           context: .
           file: apps/api/Dockerfile
           target: migrate
           push: true
-          tags: ${{ env.IMAGE_NAME }}
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:cache,scope=migrate
-          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:cache,scope=migrate,mode=max
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/migrate:pr-${{ github.event.pull_request.number }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/migrate:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/migrate:buildcache,mode=max
 
   e2e:
     needs: [detect-changes, build-images]
