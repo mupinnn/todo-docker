@@ -97,16 +97,14 @@ jobs:
 
       - name: Run E2E tests
         env:
-          API_IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/web:pr-${{ github.event.pull_request.number }}
-          WEB_IMAGE: ${{ env.REGISTRY}}/${{ github.repository }}/api:pr-${{ github.event.pull_request.number }}
+          API_IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/api:pr-${{ github.event.pull_request.number }}
+          WEB_IMAGE: ${{ env.REGISTRY}}/${{ github.repository }}/web:pr-${{ github.event.pull_request.number }}
           MIGRATE_IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/migrate:pr-${{ github.event.pull_request.number }}
         run: |
           cat <<EOF > docker-compose.e2e.run.yml
           services:
             db:
               image: postgres:16
-              ports:
-                - "5432:5432"
               environment:
                 - POSTGRES_PASSWORD=postgres
                 - POSTGRES_USER=postgres
