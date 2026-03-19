@@ -64,8 +64,8 @@ jobs:
           file: apps/${{ matrix.app }}/Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},scope=${{ matrix.app }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},scope=${{ matrix.app }},mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache,scope=${{ matrix.app }}
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache,scope=${{ matrix.app }},mode=max
 
       - name: Build and push migrate image
         uses: docker/build-push-action@v5
@@ -77,8 +77,8 @@ jobs:
           target: migrate
           push: true
           tags: ${{ env.IMAGE_NAME }}
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }},scope=migrate
-          cache-to: type=registry,ref=${{ env.IMAGE_NAME }},scope=migrate,mode=max
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:cache,scope=migrate
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:cache,scope=migrate,mode=max
 
   e2e:
     needs: [detect-changes, build-images]
