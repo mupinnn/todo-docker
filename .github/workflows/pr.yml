@@ -112,7 +112,7 @@ jobs:
             migrate:
               image: ${MIGRATE_IMAGE}
               environment:
-                - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+                - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres?sslmode=disable
               depends_on:
                 db:
                   condition: service_started
