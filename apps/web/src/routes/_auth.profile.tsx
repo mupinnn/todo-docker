@@ -71,7 +71,7 @@ function RouteComponent() {
       if (variables.isCurrent) {
         await logout();
         await router.invalidate().finally(() => {
-          navigate({ to: "/login", replace: true });
+          navigate({ to: "/login", replace: true, reloadDocument: true });
         });
       }
     },
