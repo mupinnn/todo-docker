@@ -62,8 +62,12 @@ jobs:
 
           docker push ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.app }}:latest
           docker push ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.app }}:${{ github.sha }}
+
+      - name: Promote migrate image
+        run: |
           docker pull ${{ env.REGISTRY }}/${{ github.repository }}/migrate:pr-${{ github.event.pull_request.number }}
-          docker tag ${{ env.REGISTRY }}/${{ github.repository }}/migrate:pr-${{ github.event.pull_request.number }} ${{ env.REGISTRY }}/todo-docker/migrate:latest
+          docker tag ${{ env.REGISTRY }}/${{ github.repository }}/migrate:pr-${{ github.event.pull_request.number }} ${{ env.REGISTRY }}/${{ github.repository }}/migrate:latest
+          docker push ${{ env.REGISTRY }}/${{ github.repository }}/migrate:${{ github.sha }}
           docker push ${{ env.REGISTRY }}/${{ github.repository }}/migrate:latest
 
   deploy:
@@ -105,6 +109,9 @@ jobs:
 
             echo "Preparing environment variables . . ."
             echo "${{ secrets.ENV_ROOT }}" > .env
+
+            sed -i '/^IMAGE_TAG=/d' .env
+            echo "IMAGE_TAG=${{ github.sha }}" >> .env
 
             mkdir -p apps/web
             echo "${{ secrets.ENV_WEB }}" > ./apps/web/.env
