@@ -111,4 +111,7 @@ jobs:
           WEB_IMAGE: ${{ env.REGISTRY}}/${{ github.repository }}/web:pr-${{ github.event.pull_request.number }}
           MIGRATE_IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/migrate:pr-${{ github.event.pull_request.number }}
         run: |
-          docker compose -f docker-compose.e2e.yml up --exit-code-from playwright
+          docker compose -f docker-compose.e2e.yml up db -d
+          docker compose -f docker-compose.e2e.yml run migrate
+          docker compose -f docker-compose.e2e.yml up api web -d
+          docker compose -f docker-compose.e2e.yml run playwright
