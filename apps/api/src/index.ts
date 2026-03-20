@@ -28,7 +28,6 @@ app.use(
 );
 
 const routes = app
-  .get("/health", (c) => c.json({ status: "ok", db: env.DATABASE_URL }))
   .route("/auth", authRoutes)
   .route("/api/todos", todoRoutes)
   .get("/api/profile", async (c) => {
