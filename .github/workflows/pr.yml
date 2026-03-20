@@ -57,25 +57,64 @@ jobs:
 
       - name: Build and push ${{ github.repository }}-${{ matrix.app }} image
         uses: docker/build-push-action@v5
-        env:
-          IMAGE_NAME: ${{ github.event.repository.name }}/${{ matrix.app }}:pr-${{ github.event.pull_request.number }}
         with:
           context: .
           file: apps/${{ matrix.app }}/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},scope=${{ matrix.app }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},scope=${{ matrix.app }},mode=max
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.app }}:pr-${{ github.event.pull_request.number }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.app }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.app }}:buildcache,mode=max
 
       - name: Build and push migrate image
         uses: docker/build-push-action@v5
-        env:
-          IMAGE_NAME: ${{ env.REGISTRY }}/${{ github.event.repository.name }}/migrate:pr-${{ github.event.pull_request.number }}
         with:
           context: .
           file: apps/api/Dockerfile
           target: migrate
           push: true
-          tags: ${{ env.IMAGE_NAME }}
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }},scope=migrate
-          cache-to: type=registry,ref=${{ env.IMAGE_NAME }},scope=migrate,mode=max
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/migrate:pr-${{ github.event.pull_request.number }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/migrate:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/migrate:buildcache,mode=max
+
+  e2e:
+    needs: [detect-changes, build-images]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create .env
+        run: |
+          echo "${{ secrets.ENV_ROOT }}" > .env
+
+          mkdir -p apps/web
+          echo "${{ secrets.ENV_WEB }}" > ./apps/web/.env
+
+          mkdir -p apps/api
+          echo "${{ secrets.ENV_API }}" > ./apps/api/.env
+
+      - uses: oven-sh/setup-bun@v2
+      - run: bun ci
+
+      - name: Run E2E tests
+        env:
+          API_IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/api:pr-${{ github.event.pull_request.number }}
+          WEB_IMAGE: ${{ env.REGISTRY}}/${{ github.repository }}/web:pr-${{ github.event.pull_request.number }}
+          MIGRATE_IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/migrate:pr-${{ github.event.pull_request.number }}
+        run: |
+          docker compose -f docker-compose.e2e.yml up db -d
+          docker compose -f docker-compose.e2e.yml run --no-deps migrate
+          docker compose -f docker-compose.e2e.yml up api web -d
+          docker compose -f docker-compose.e2e.yml run --no-deps playwright

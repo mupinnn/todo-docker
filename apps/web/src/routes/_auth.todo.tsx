@@ -245,8 +245,6 @@ function RouteComponent() {
             </form>
           </Form>
 
-          {todosQuery.isPending && <Skeleton className="h-40" />}
-          {todosQuery.isError && <p>Something went wrong.</p>}
           {todosQuery.isPending ? (
             <Skeleton data-testid="todo-skeleton" className="h-40" />
           ) : todosQuery.isError ? (

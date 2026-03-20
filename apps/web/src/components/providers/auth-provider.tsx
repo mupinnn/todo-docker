@@ -52,7 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
   });
 
-  const logout = () => {};
+  const logout = async () => {
+    await queryClient.cancelQueries({ queryKey: ["profile"] });
+    await queryClient.resetQueries({ queryKey: ["profile"] });
+    await queryClient.resetQueries({ queryKey: ["sessions"] });
+  };
 
   if (profileQuery.isLoading)
     return (

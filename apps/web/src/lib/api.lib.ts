@@ -1,5 +1,6 @@
 import { hc } from "hono/client";
 import type { Api } from "@todo-docker/api";
+import { getEnv } from "./utils.lib";
 
 let isRefreshing = false;
 let needRefreshRequestsQueue: (() => void)[] = [];
@@ -16,7 +17,7 @@ const customFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
 
       try {
         const refreshResponse = await fetch(
-          `${import.meta.env.VITE_API_URL}/auth/refresh`,
+          `${getEnv("VITE_API_URL")}/auth/refresh`,
           {
             credentials: "include",
             method: "POST",
@@ -47,6 +48,6 @@ const customFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   return response;
 };
 
-export const apiClient = hc<Api>(import.meta.env.VITE_API_URL, {
+export const apiClient = hc<Api>(getEnv("VITE_API_URL"), {
   fetch: customFetch,
 });
